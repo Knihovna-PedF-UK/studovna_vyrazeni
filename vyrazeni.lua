@@ -76,12 +76,14 @@ local function get_score(record, is_duplicate, loans)
   if rok then
     rok = 2000 + rok
   else
-    -- starší josu 259YY
+    -- starší jsou 259YY
     rok = 1900 + tonumber(ck:match("^...(..)") )
   end
   -- or ck:match("^...(..)"))
   local current_year = tonumber(os.date("%Y"))
-  local stari =  current_year - rok
+  -- předpokládáme, že nic neni starší, než 100 let
+  local stari =  100 - (current_year - rok)
+  if stari < 0 then stari = 0 end
   local koeficient = is_duplicate and 1 or 3
   return (stari / koeficient) * (loans+1)
 end
@@ -95,7 +97,7 @@ local function score_records(data, pujcovanost)
   end
 end
 
---- comment
+--- vybíráme knížky k vyřazení na základě procenta jednotek, které chceme vyřadit
 --- @param data table
 --- @param percent number how many records should be removed
 local function prune(data, percent)
@@ -108,8 +110,6 @@ local function prune(data, percent)
     signatury2[sig2] = curr
   end
   for sig2, records in pairs(signatury2) do
-    print "------------"
-    print(sig2)
     -- setřídit podle vyřazovacího skóre
     table.sort(records, function(a,b)
       return a.score < b.score
@@ -129,9 +129,9 @@ find_duplicates(data)
 score_records(data, pujcovanost)
 prune(data, 15)
 
-print(table.concat(header, "\t"), "vyradit")
+print(table.concat(header, "\t"), "vyradit", "score")
 for _, rec in ipairs(data) do
-  print(table.concat(rec, "\t"), (rec.prune or "false"))
+  print(table.concat(rec, "\t"), (rec.prune or "false"), rec.score)
 end
 
 
